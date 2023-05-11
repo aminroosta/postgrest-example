@@ -45,9 +45,11 @@ services:
     command: -user=${PGUSER} -password=${PGPASSWORD} migrate
     volumes:
       - ./sql:/flyway/sql
+      - ./flyway.conf:/flyway/conf/flyway.conf
+    env_file:
+      - .envrc
     environment:
       FLYWAY_LOCATIONS: filesystem:/flyway/sql
-      FLYWAY_URL: jdbc:postgresql://postgres:5432/${PGDATABASE}
     depends_on:
       postgres:
         condition: service_healthy

@@ -72,7 +72,7 @@ confidence.
    list the tables or `SELECT * FROM <table_name>` to query a table.
 
 6. To apply more migrations, you can add more scripts to the `sql` directory
-   and then run `docker exec -it flyway migrate` again. Flyway will only apply the new
+   and then run `docker run --rm flyway migrate` again. Flyway will only apply the new
    migrations that have not been applied before.
 
 7. To undo a migration, you can use the `undo` command instead of `migrate`.
