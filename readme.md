@@ -36,47 +36,41 @@ To execute SQL commands on the PostgreSQL database, run:
 ```bash
 docker exec -it postgres psql
 ```
+## How to use Shmig
 
+Shmig is a simple shell script that manages database migrations using SQL
+files. You can find more information about Shmig at https://github.com/mbucc/shmig.
 
-## How to use Flyway with Docker Compose
+To use Shmig with this project, follow these steps:
 
-Flyway is a tool that helps you manage database migrations with ease and
-confidence.
+- Run `docker-compose run --rm shmig create posts_table` to create a new
+migration file in the `migrations` folder with the following
+naming convention: `<unix_epoch>_migration_name.sql`.
 
-1. Write your migration scripts in SQL and save them in the `sql` directory.
-   The scripts must follow the naming convention
-   `V<version>__<description>.sql`. For example, `V1__create_table.sql` or
-   `V2__add_column.sql`. The version must be a positive integer and must be
-   unique. The description can be any text that describes the migration.
+```sql
+-- Migration: posts_table
+-- Created at: 2021-12-15 12:30:00
+-- ====  UP  ====
+BEGIN;
 
-2. Run `docker-compose up -d` to start all the services in detached mode.
+CREATE TABLE posts (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
 
-3. <details><summary>Run `docker-compose logs flyway` to see the output of the
-   flyway command. You should see something like this:</summary>
+COMMIT;
 
-   ```
-   flyway_1  | Flyway Community Edition 8.2.3 by Redgate
-   flyway_1  | Database: jdbc:postgresql://postgres/mydb (PostgreSQL 14.1)
-   flyway_1  | Successfully validated 2 migrations (execution time 00:00.021s)
-   flyway_1  | Creating Schema History table "public"."flyway_schema_history" ...
-   flyway_1  | Current version of schema "public": << Empty Schema >>
-   flyway_1  | Migrating schema "public" to version "1 - create table"
-   flyway_1  | Migrating schema "public" to version "2 - add column"
-   flyway_1  | Successfully applied 2 migrations to schema "public" (execution time 00:00.041s)
-   ```
-   </details>
+-- ==== DOWN ====
+BEGIN;
 
-5. You can verify that the migrations have been applied by connecting to the
-   PostgreSQL database and querying the tables. For example, you can run
-   `docker exec -it postgres psql` to open a psql shell and then run `\dt` to
-   list the tables or `SELECT * FROM <table_name>` to query a table.
+DROP TABLE posts;
 
-6. To apply more migrations, you can add more scripts to the `sql` directory
-   and then run `docker run --rm flyway migrate` again. Flyway will only apply the new
-   migrations that have not been applied before.
+COMMIT;
+```
 
-7. To undo a migration, you can use the `undo` command instead of `migrate`.
-   However, this requires that you have undo scripts in your `sql` directory
-   that follow the naming convention `U<version>__<description>.sql`. For
-   example, `U1__drop_table.sql` or `U2__remove_column.sql`. The version must
-   match the version of the migration script that you want to undo.
+- Run `docker-compose run --rm shmig up` to apply all pending migrations to the database.
+- Run `docker-compose run --rm shmig down` to revert the last applied migration from the database.
+- Run `docker-compose run --rm shmig status` to check the status of the migrations.

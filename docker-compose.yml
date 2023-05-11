@@ -11,7 +11,7 @@ services:
       PGRST_DB_SCHEMAS: api
       PGRST_DB_ANON_ROLE: web_anon
     depends_on:
-      flyway:
+      shmig:
         condition: service_completed_successfully
   postgres:
     image: postgres
@@ -29,8 +29,9 @@ services:
       interval: 1s
       timeout: 5s
       retries: 5
+    volumes:
+      - ./migrations:/migrations
   # Uncomment this if you want to persist the data.
-  # volumes:
   #   - "./pgdata:/var/lib/postgresql/data"
   swagger:
     image: swaggerapi/swagger-ui
@@ -39,17 +40,21 @@ services:
       - "8080:8080"
     environment:
       API_URL: http://localhost:3000/
-  flyway:
-    image: flyway/flyway
-    container_name: flyway
-    command: -user=${PGUSER} -password=${PGPASSWORD} migrate
-    volumes:
-      - ./sql:/flyway/sql
-      - ./flyway.conf:/flyway/conf/flyway.conf
-    env_file:
-      - .envrc
-    environment:
-      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+  shmig:
+    image: mkbucc/shmig
+    container_name: shmig
     depends_on:
       postgres:
         condition: service_healthy
+    env_file:
+      - .envrc
+    environment:
+      - PORT=5432
+      - TYPE=postgresql
+      - HOST=postgres
+      - LOGIN=${PGUSER}
+      - PASSWORD=${PGPASSWORD}
+      - DATABASE=${PGDATABASE}
+    volumes:
+      - ./migrations:/sql
+    command: up
