@@ -65,3 +65,4 @@ COMMIT;
 - Run `docker-compose run --rm shmig up` to apply all pending migrations to the database.
 - Run `docker-compose run --rm shmig down` to revert the last applied migration from the database.
 - Run `docker-compose run --rm shmig status` to check the status of the migrations.
+- Run `NOTIFY pgrst, 'reload schema';` sql code to reload postgrest schema.
