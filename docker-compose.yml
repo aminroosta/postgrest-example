@@ -19,6 +19,8 @@ services:
     container_name: postgres
     env_file:
       - .envrc
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_DB: ${PGDATABASE}
       POSTGRES_USER: ${PGUSER}
@@ -57,3 +59,14 @@ services:
     volumes:
       - ./migrations:/sql
     command: up
+  develop:
+    image: postgres
+    container_name: develop
+    env_file:
+      - .envrc
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: ${PGDATABASE}
+      POSTGRES_USER: ${PGUSER}
+      POSTGRES_PASSWORD: ${PGPASSWORD}
