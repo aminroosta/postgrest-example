@@ -1,35 +1,27 @@
 -- clean up existing db objects
 set client_min_messages to warning;
 drop schema if exists api cascade;
+drop schema if exists basic_auth cascade;
+drop schema if exists pgjwt cascade;
 drop role if exists todo_user;
 drop role if exists web_anon;
 drop role if exists authenticator;
 
--- application code
-create schema api;
+-- create pgcrypto extension
+create extension if not exists pgcrypto;
 
-create table api.todos (
-  id serial primary key,
-  done boolean not null default false,
-  task text not null,
-  due timestamptz
-);
-
-insert into api.todos (task)
-values
-  ('finish tutorial 0'),
-  ('pat self on back');
+-- web_anon & authenticator roles
+create role authenticator noinherit login
+password 'apple-desk-pen-13';
 
 create role web_anon nologin;
-grant usage on schema api to web_anon;
-grant select on api.todos to web_anon;
-
-create role authenticator noinherit login password 'apple-desk-pen-13';
 grant web_anon to authenticator;
 
-create role todo_user nologin;
-grant todo_user to authenticator;
+-- api schema
+create schema api;
+grant usage on schema api to web_anon;
 
-grant usage on schema api to todo_user;
-grant all on api.todos to todo_user;
-grant usage, select on sequence api.todos_id_seq to todo_user;
+-- imports
+\i sql/api.todos.sql
+\i sql/pgjwt.sql
+-- \i sql/basic_auth.sql
