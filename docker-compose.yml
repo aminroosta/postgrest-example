@@ -12,7 +12,7 @@ services:
       PGRST_DB_ANON_ROLE: web_anon
       PGRST_JWT_SECRET: ${JWT_SECRET}
     depends_on:
-      shmig:
+      flyway:
         condition: service_completed_successfully
   postgres:
     image: postgres
@@ -33,6 +33,7 @@ services:
     volumes:
       - ./migrations:/migrations
   # Uncomment this if you want to persist the data.
+  # volumes:
   #   - "./pgdata:/var/lib/postgresql/data"
   swagger:
     image: swaggerapi/swagger-ui
@@ -41,24 +42,20 @@ services:
       - "8080:8080"
     environment:
       API_URL: http://localhost:3000/
-  shmig:
-    image: mkbucc/shmig
-    container_name: shmig
-    depends_on:
-      postgres:
-        condition: service_healthy
+  flyway:
+    image: flyway/flyway
+    container_name: flyway
+    command: -user=${PGUSER} -password=${PGPASSWORD} migrate
+    volumes:
+      - ./migrations:/flyway/migrations
+      - ./flyway.conf:/flyway/conf/flyway.conf
     env_file:
       - .envrc
     environment:
-      - PORT=5432
-      - TYPE=postgresql
-      - HOST=postgres
-      - LOGIN=${PGUSER}
-      - PASSWORD=${PGPASSWORD}
-      - DATABASE=${PGDATABASE}
-    volumes:
-      - ./migrations:/sql
-    command: up
+      FLYWAY_LOCATIONS: filesystem:/flyway/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
   develop:
     image: postgres
     container_name: develop
